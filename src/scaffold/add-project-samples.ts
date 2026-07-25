@@ -15,6 +15,7 @@ export interface SampleProject {
   framework: FrameworkKind;
   installedSampleIds: SampleId[];
   isTypeScript: boolean;
+  sampleShellManaged: boolean;
   useTds: boolean;
 }
 
@@ -57,6 +58,7 @@ export function inspectSampleProject(targetDirectory: string): SampleProject {
     framework: metadata.framework,
     installedSampleIds: metadata.samples ?? detectInstalledSampleIds(targetDirectory),
     isTypeScript: isTypeScriptProject(targetDirectory),
+    sampleShellManaged: metadata.sampleShellManaged,
     useTds,
   };
 }
@@ -86,11 +88,14 @@ export function addProjectSamples(
   }
 
   if (project.useTds) {
-    applyTdsSamples(targetDirectory, installedSampleIds);
+    applyTdsSamples(targetDirectory, installedSampleIds, {
+      preserveExistingShell: project.sampleShellManaged,
+    });
   } else {
     applyViteSamples({
       framework: project.framework,
       isTypeScript: project.isTypeScript,
+      preserveExistingShell: project.sampleShellManaged,
       sampleIds: installedSampleIds,
       targetDirectory,
     });

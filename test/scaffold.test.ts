@@ -99,17 +99,25 @@ describe("finalizeProject", () => {
         baseProject,
         packageManager: "npm",
         packageName: "tds-app",
-        sampleIds: ["iap", "iaa"],
+        sampleIds: [],
         skipInstall: true,
         targetDirectory: directory,
         useTds: true,
       });
 
+      const appPath = path.join(directory, "src", "App.tsx");
+      writeFileSync(
+        appPath,
+        readFileSync(appPath, "utf8").replace("반가워요", "사용자가 수정한 앱"),
+      );
+      addProjectSamples(directory, ["iap"]);
+      addProjectSamples(directory, ["iaa"]);
+
       expect(existsSync(path.join(directory, "src", "hooks", "useInAppAds.tsx"))).toBe(true);
       expect(existsSync(path.join(directory, "src", "hooks", "useInAppPurchase.ts"))).toBe(true);
-      expect(readFileSync(path.join(directory, "src", "App.tsx"), "utf8")).not.toContain(
-        "{{SAMPLE_",
-      );
+      expect(readFileSync(appPath, "utf8")).toContain("사용자가 수정한 앱");
+      expect(readFileSync(appPath, "utf8")).toContain('import { useState } from "react";');
+      expect(readFileSync(appPath, "utf8")).not.toContain("{{SAMPLE_");
       expect(
         JSON.parse(readFileSync(path.join(directory, "package.json"), "utf8")).createAitApp
           .sampleShellManaged,

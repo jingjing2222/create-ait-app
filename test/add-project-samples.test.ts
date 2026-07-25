@@ -57,15 +57,25 @@ describe("addProjectSamples", () => {
     });
     expect(existsSync(path.join(directory, "src", "pages", "InAppPurchasePage.ts"))).toBe(true);
 
+    const mainPath = path.join(directory, "src", "main.ts");
+    writeFileSync(
+      mainPath,
+      readFileSync(mainPath, "utf8").replace(
+        "<h1>Apps in Toss</h1>",
+        "<h1>사용자가 수정한 앱</h1>",
+      ),
+    );
+
     expect(addProjectSamples(directory, ["iap", "iaa"])).toMatchObject({
       addedSampleIds: ["iaa"],
       installedSampleIds: ["iap", "iaa"],
       skippedSampleIds: ["iap"],
     });
 
-    const main = readFileSync(path.join(directory, "src", "main.ts"), "utf8");
+    const main = readFileSync(mainPath, "utf8");
     expect(main).toContain("mountInAppPurchasePage");
     expect(main).toContain("mountInAppAdsPage");
+    expect(main).toContain("<h1>사용자가 수정한 앱</h1>");
     expect(inspectSampleProject(directory).installedSampleIds).toEqual(["iap", "iaa"]);
   });
 
@@ -75,5 +85,23 @@ describe("addProjectSamples", () => {
     writeFileSync(path.join(directory, "package.json"), "{}");
 
     expect(() => addProjectSamples(directory, ["iap"])).toThrow("create-ait-app으로 만든 프로젝트");
+  });
+
+  it("refuses to overwrite a sample shell when its management markers are missing", () => {
+    const directory = createVanillaTypeScriptProject();
+    addProjectSamples(directory, ["iap"]);
+
+    const mainPath = path.join(directory, "src", "main.ts");
+    const customizedMain = readFileSync(mainPath, "utf8").replace(
+      "// create-ait-app:sample-routes:start",
+      "// 사용자가 관리 구간을 제거함",
+    );
+    writeFileSync(mainPath, customizedMain);
+
+    expect(() => addProjectSamples(directory, ["iaa"])).toThrow(
+      "App/main 파일을 안전하게 수정할 수 없어요",
+    );
+    expect(readFileSync(mainPath, "utf8")).toBe(customizedMain);
+    expect(inspectSampleProject(directory).installedSampleIds).toEqual(["iap"]);
   });
 });
