@@ -35,6 +35,7 @@ describe("finalizeProject", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "create-ait-overlay-"));
     mkdirSync(path.join(directory, "src"));
     writeFileSync(path.join(directory, "index.html"), "");
+    writeFileSync(path.join(directory, "src", "main.js"), "");
     writeFileSync(path.join(directory, "README.md"), "# Vite app\n");
     writeFileSync(
       path.join(directory, "package.json"),
@@ -79,6 +80,7 @@ describe("finalizeProject", () => {
       APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
     );
     expect(packageJson.createAitApp.createViteVersion).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(packageJson.createAitApp.sampleEntryHash).toMatch(/^[a-f0-9]{64}$/);
     expect(packageJson.createAitApp.sampleShellManaged).toBe(false);
     expect(readFileSync(path.join(directory, "apps-in-toss.config.ts"), "utf8")).toContain(
       'webBundleDir: "dist"',
